@@ -39,7 +39,9 @@ jobs:
           dotnet build OrionAttributes.csproj -c Release --configfile nuget.config --no-restore
 
       - name: Unit tests
-        run: dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --configfile nuget.config --verbosity minimal
+        run: |
+          dotnet restore tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj --configfile nuget.config --force-evaluate
+          dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --no-restore --verbosity minimal
 
       - name: Smoke boot server with plugin
         env:
