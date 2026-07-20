@@ -1,6 +1,4 @@
-using Orion.Entity.Traits;
 using Orion.Gameplay;
-using Orion.Item.Traits;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Services;
 using System.Reflection;
@@ -20,10 +18,9 @@ public sealed class OrionAttributesPlugin : IOrionPlugin
 
     public void Load(IPluginLoadContext context)
     {
-        _ = context;
         Assembly assembly = typeof(OrionAttributesPlugin).Assembly;
-        EntityTraitRegistry.RegisterFromAssembly(assembly);
-        ItemTraitRegistry.RegisterFromAssembly(assembly);
+        context.Registries.EntityTraits.RegisterFromAssembly(assembly, Id);
+        context.Registries.ItemTraits.RegisterFromAssembly(assembly, Id);
     }
 
     public void OnEnable(IPluginContext context)

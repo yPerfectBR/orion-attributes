@@ -1,9 +1,9 @@
+using Orion.Api.Traits;
 using Orion.Entity.Traits;
 using Orion.Entity.Traits.Types;
 using Orion.Player;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Nbt;
-using Orion.Traits;
 using Orion.World;
 using Entity = Orion.Entity.Entity;
 
