@@ -1,0 +1,13 @@
+{
+  "id": "orion:attributes",
+  "version": "1.0.0",
+  "api": "0.1.0",
+  "description": "Health, hunger, food use, and public attribute services for other plugins.",
+  "authors": ["Orion"],
+  "main": "OrionAttributes.OrionAttributesPlugin",
+  "depend": [],
+  "softdepend": [
+    { "id": "orion:inventory", "load": "after", "versions": ["1.0.0", "99.0.0"] }
+  ],
+  "provides": ["orion:attributes", "orion:health", "orion:hunger"]
+}
