@@ -1,4 +1,4 @@
-using Orion.Events;
+using Orion.Api.Events;
 using Orion.Item.Traits;
 using Orion.Player;
 using Orion.Protocol.Enums;
@@ -32,14 +32,23 @@ public sealed class EntityHealthTrait : EntityAttributeTrait
 
     public void ApplyDamage(float amount, Entity? damager = null, ActorDamageCause? cause = null)
     {
-        EntityHurtSignal signal = new(Entity, amount, cause, damager);
+        int? damageCause = cause.HasValue ? (int)cause.Value : null;
+        EntityHurtSignal signal = new(Entity, amount, damageCause, damager);
+        if (Entity.Dimension?.World?.Server is Orion.Server server)
+        {
+            server.Emit(signal);
+        }
+
         if (!signal.Emit())
         {
             return;
         }
 
         CurrentValue -= signal.Amount;
-        if (signal.Cause == ActorDamageCause.EntityAttack && damager is not null && Entity.Dimension is not null && damager.Dimension == Entity.Dimension)
+        if (signal.DamageCause == (int)ActorDamageCause.EntityAttack
+            && damager is not null
+            && Entity.Dimension is not null
+            && damager.Dimension == Entity.Dimension)
         {
             ulong currentTick = Entity.Dimension.World is Tickable tickable ? tickable.TickValue : 0;
             if (currentTick >= _lastKnockbackTick && currentTick - _lastKnockbackTick >= KnockbackCooldownTicks)
@@ -78,7 +87,7 @@ public sealed class EntityHealthTrait : EntityAttributeTrait
             {
                 ActorRuntimeId = Entity.RuntimeId,
                 Event = ActorEvent.Hurt,
-                Data = (int)(signal.Cause ?? ActorDamageCause.None),
+                Data = signal.DamageCause ?? (int)ActorDamageCause.None,
                 FiredAt = new Optional<Vec3f>
                 {
                     HasValue = true,
@@ -114,7 +123,7 @@ public sealed class EntityHealthTrait : EntityAttributeTrait
 
         if (CurrentValue <= 0)
         {
-            Entity.Kill(new EntityDeathOptions(KillerSource: damager, DamageCause: signal.Cause));
+            Entity.Kill(new EntityDeathOptions(KillerSource: damager, DamageCause: cause));
         }
     }
 

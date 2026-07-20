@@ -1,3 +1,4 @@
+using Orion.Api.Events;
 using Orion.Entity.Traits;
 using Orion.Gameplay;
 using Orion.Item;
@@ -176,9 +177,22 @@ public sealed class AttributeGameplayServices :
     {
         ItemStackFoodTrait? food = heldItem.GetTrait<ItemStackFoodTrait>();
         PlayerHungerTrait? hunger = player.GetTrait<PlayerHungerTrait>();
-        if (food is null
-            || hunger is null
-            || !hunger.Eat(food.Nutrition, food.SaturationModifier, food.CanAlwaysEat))
+        if (food is null || hunger is null)
+        {
+            return false;
+        }
+
+        if (player.Dimension?.World?.Server is Orion.Server server)
+        {
+            PlayerFoodEatSignal eatSignal = new(player, heldItem);
+            server.Emit(eatSignal);
+            if (!eatSignal.Emit())
+            {
+                return false;
+            }
+        }
+
+        if (!hunger.Eat(food.Nutrition, food.SaturationModifier, food.CanAlwaysEat))
         {
             return false;
         }
