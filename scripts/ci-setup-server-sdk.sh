@@ -45,5 +45,4 @@ cat > "$PLUGIN_DIR/nuget.config" <<EOF
 </configuration>
 EOF
 
-dotnet restore "$PLUGIN_DIR"/*.csproj -c Release --configfile "$PLUGIN_DIR/nuget.config" --force-evaluate
 ls -la "$NUGET_DIR"

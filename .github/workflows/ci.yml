@@ -21,8 +21,8 @@ jobs:
       - name: Checkout OrionServerBE
         uses: actions/checkout@v4
         with:
-          repository: yPerfectBR/OrionServerBE
-          ref: integration
+          repository: OrionBedrock/OrionServerBE
+          ref: development
           path: OrionServerBE
 
       - name: Setup .NET
@@ -34,7 +34,9 @@ jobs:
         run: bash scripts/ci-setup-server-sdk.sh
 
       - name: Build plugin
-        run: dotnet build OrionAttributes.csproj -c Release --configfile nuget.config --no-restore
+        run: |
+          dotnet restore OrionAttributes.csproj -c Release --configfile nuget.config --force-evaluate
+          dotnet build OrionAttributes.csproj -c Release --configfile nuget.config --no-restore
 
       - name: Unit tests
         run: dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --configfile nuget.config --verbosity minimal
