@@ -1,4 +1,6 @@
+using Orion.Api;
 using Orion.Api.Events;
+using Orion.Api.Items;
 using Orion.Entity.Traits;
 using Orion.Gameplay;
 using Orion.Item;
@@ -25,17 +27,18 @@ public sealed class AttributeGameplayServices :
     public IEntityHealthService Health => this;
     public IPlayerHungerService Hunger => this;
 
-    public void EnableHud(Player player)
+    public void EnableHud(IPlayer player)
     {
-        List<HudElement> elements = [];
-        if (player.GetTrait<EntityHealthTrait>() is not null)
+        Player concrete = RequirePlayer(player);
+        List<Orion.Protocol.Enums.HudElement> elements = [];
+        if (concrete.GetTrait<EntityHealthTrait>() is not null)
         {
-            elements.Add(HudElement.Health);
+            elements.Add(Orion.Protocol.Enums.HudElement.Health);
         }
 
-        if (player.GetTrait<PlayerHungerTrait>() is not null)
+        if (concrete.GetTrait<PlayerHungerTrait>() is not null)
         {
-            elements.Add(HudElement.Hunger);
+            elements.Add(Orion.Protocol.Enums.HudElement.Hunger);
         }
 
         if (elements.Count == 0)
@@ -43,28 +46,33 @@ public sealed class AttributeGameplayServices :
             return;
         }
 
-        player.SetHud(HudVisibility.Reset, elements.ToArray());
+        concrete.SetHud(Orion.Protocol.Enums.HudVisibility.Reset, elements.ToArray());
     }
 
     public bool TryApplyDamage(
-        Entity entity,
+        IEntity entity,
         float amount,
-        Entity? damager = null,
-        ActorDamageCause? cause = null)
+        IEntity? damager = null,
+        int? damageCause = null)
     {
-        EntityHealthTrait? health = entity.GetTrait<EntityHealthTrait>();
-        if (health is null || !entity.IsAlive)
+        Entity concrete = RequireEntity(entity);
+        Entity? concreteDamager = damager is null ? null : RequireEntity(damager);
+        ActorDamageCause? cause = damageCause.HasValue ? (ActorDamageCause)damageCause.Value : null;
+
+        EntityHealthTrait? health = concrete.GetTrait<EntityHealthTrait>();
+        if (health is null || !concrete.IsAlive)
         {
             return false;
         }
 
-        health.ApplyDamage(amount, damager, cause);
+        health.ApplyDamage(amount, concreteDamager, cause);
         return true;
     }
 
-    public bool TryHeal(Entity entity, float amount)
+    public bool TryHeal(IEntity entity, float amount)
     {
-        EntityHealthTrait? health = entity.GetTrait<EntityHealthTrait>();
+        Entity concrete = RequireEntity(entity);
+        EntityHealthTrait? health = concrete.GetTrait<EntityHealthTrait>();
         if (health is null || amount <= 0f)
         {
             return false;
@@ -75,9 +83,9 @@ public sealed class AttributeGameplayServices :
         return health.CurrentValue > before;
     }
 
-    public bool TryGet(Entity entity, out float current, out float maximum)
+    public bool TryGet(IEntity entity, out float current, out float maximum)
     {
-        EntityHealthTrait? health = entity.GetTrait<EntityHealthTrait>();
+        EntityHealthTrait? health = RequireEntity(entity).GetTrait<EntityHealthTrait>();
         if (health is null)
         {
             current = 0f;
@@ -90,9 +98,9 @@ public sealed class AttributeGameplayServices :
         return true;
     }
 
-    public bool TrySet(Entity entity, float current)
+    public bool TrySet(IEntity entity, float current)
     {
-        EntityHealthTrait? health = entity.GetTrait<EntityHealthTrait>();
+        EntityHealthTrait? health = RequireEntity(entity).GetTrait<EntityHealthTrait>();
         if (health is null)
         {
             return false;
@@ -102,15 +110,15 @@ public sealed class AttributeGameplayServices :
         return true;
     }
 
-    public bool TryEat(Player player, int nutrition, float saturationModifier, bool canAlwaysEat)
+    public bool TryEat(IPlayer player, int nutrition, float saturationModifier, bool canAlwaysEat)
     {
-        PlayerHungerTrait? hunger = player.GetTrait<PlayerHungerTrait>();
+        PlayerHungerTrait? hunger = RequirePlayer(player).GetTrait<PlayerHungerTrait>();
         return hunger is not null && hunger.Eat(nutrition, saturationModifier, canAlwaysEat);
     }
 
-    public bool TryAddExhaustion(Player player, float amount)
+    public bool TryAddExhaustion(IPlayer player, float amount)
     {
-        PlayerHungerTrait? hunger = player.GetTrait<PlayerHungerTrait>();
+        PlayerHungerTrait? hunger = RequirePlayer(player).GetTrait<PlayerHungerTrait>();
         if (hunger is null)
         {
             return false;
@@ -120,9 +128,9 @@ public sealed class AttributeGameplayServices :
         return true;
     }
 
-    public bool TryGet(Player player, out float hunger, out float saturation, out float exhaustion)
+    public bool TryGet(IPlayer player, out float hunger, out float saturation, out float exhaustion)
     {
-        PlayerHungerTrait? trait = player.GetTrait<PlayerHungerTrait>();
+        PlayerHungerTrait? trait = RequirePlayer(player).GetTrait<PlayerHungerTrait>();
         if (trait is null)
         {
             hunger = 0f;
@@ -137,9 +145,9 @@ public sealed class AttributeGameplayServices :
         return true;
     }
 
-    public bool TrySetHunger(Player player, float hunger, float? saturation = null)
+    public bool TrySetHunger(IPlayer player, float hunger, float? saturation = null)
     {
-        PlayerHungerTrait? trait = player.GetTrait<PlayerHungerTrait>();
+        PlayerHungerTrait? trait = RequirePlayer(player).GetTrait<PlayerHungerTrait>();
         if (trait is null)
         {
             return false;
@@ -154,11 +162,13 @@ public sealed class AttributeGameplayServices :
         return true;
     }
 
-    public bool TryBeginUse(Player player, ItemStack heldItem, out ulong durationTicks)
+    public bool TryBeginUse(IPlayer player, IItemStack heldItem, out ulong durationTicks)
     {
         durationTicks = 0UL;
-        ItemStackFoodTrait? food = heldItem.GetTrait<ItemStackFoodTrait>();
-        PlayerHungerTrait? hunger = player.GetTrait<PlayerHungerTrait>();
+        Player concrete = RequirePlayer(player);
+        ItemStack stack = RequireStack(heldItem);
+        ItemStackFoodTrait? food = stack.GetTrait<ItemStackFoodTrait>();
+        PlayerHungerTrait? hunger = concrete.GetTrait<PlayerHungerTrait>();
         if (food is null || hunger is null)
         {
             return false;
@@ -169,22 +179,24 @@ public sealed class AttributeGameplayServices :
             return false;
         }
 
-        durationTicks = GetUseDurationTicks(heldItem);
+        durationTicks = GetUseDurationTicks(stack);
         return true;
     }
 
-    public bool TryCompleteUse(Player player, ItemStack heldItem, int slot)
+    public bool TryCompleteUse(IPlayer player, IItemStack heldItem, int slot)
     {
-        ItemStackFoodTrait? food = heldItem.GetTrait<ItemStackFoodTrait>();
-        PlayerHungerTrait? hunger = player.GetTrait<PlayerHungerTrait>();
+        Player concrete = RequirePlayer(player);
+        ItemStack stack = RequireStack(heldItem);
+        ItemStackFoodTrait? food = stack.GetTrait<ItemStackFoodTrait>();
+        PlayerHungerTrait? hunger = concrete.GetTrait<PlayerHungerTrait>();
         if (food is null || hunger is null)
         {
             return false;
         }
 
-        if (player.Dimension?.World?.Server is Orion.Server server)
+        if (concrete.Dimension?.World?.Server is Orion.Server server)
         {
-            PlayerFoodEatSignal eatSignal = new(player, heldItem);
+            PlayerFoodEatSignal eatSignal = new(concrete, stack);
             server.Emit(eatSignal);
             if (!eatSignal.Emit())
             {
@@ -205,8 +217,8 @@ public sealed class AttributeGameplayServices :
             return false;
         }
 
-        heldItem.DecrementStack();
-        if (heldItem.StackSize == 0)
+        stack.DecrementStack();
+        if (stack.StackSize == 0)
         {
             access.Container.ClearSlot(slot);
         }
@@ -220,11 +232,11 @@ public sealed class AttributeGameplayServices :
             ItemStack converted = new(convertedType);
             if (!access.Container.AddItem(converted))
             {
-                _ = player.DropItem(converted);
+                _ = concrete.DropItem(converted);
             }
         }
 
-        player.SendAttributes();
+        concrete.SendAttributes();
         return true;
     }
 
@@ -237,4 +249,13 @@ public sealed class AttributeGameplayServices :
 
         return DefaultFoodUseTicks;
     }
+
+    static Player RequirePlayer(IPlayer player) =>
+        player as Player ?? throw new ArgumentException("Player must be an Orion.Player.Player.", nameof(player));
+
+    static Entity RequireEntity(IEntity entity) =>
+        entity as Entity ?? throw new ArgumentException("Entity must be an Orion.Entity.Entity.", nameof(entity));
+
+    static ItemStack RequireStack(IItemStack stack) =>
+        stack as ItemStack ?? throw new ArgumentException("Stack must be an Orion.Item.ItemStack.", nameof(stack));
 }
