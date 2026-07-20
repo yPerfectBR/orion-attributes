@@ -35,7 +35,7 @@ jobs:
 
       - name: Build plugin
         run: |
-          dotnet restore OrionAttributes.csproj -c Release --configfile nuget.config --force-evaluate
+          dotnet restore OrionAttributes.csproj --configfile nuget.config --force-evaluate
           dotnet build OrionAttributes.csproj -c Release --configfile nuget.config --no-restore
 
       - name: Unit tests
