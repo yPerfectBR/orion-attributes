@@ -18,20 +18,10 @@ jobs:
         with:
           path: plugin
 
-      - name: Checkout OrionServerBE
-        uses: actions/checkout@v4
-        with:
-          repository: OrionBedrock/OrionServerBE
-          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
-          path: OrionServerBE
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
 
       - name: Build
-        run: >
-          dotnet build OrionAttributes.csproj -c Release
-          -p:OrionServerBERoot=$GITHUB_WORKSPACE/OrionServerBE
-          -p:PluginsSiblingRoot=$GITHUB_WORKSPACE
+        run: dotnet build OrionAttributes.csproj -c Release
