@@ -16,10 +16,10 @@ deploy_plugin() {
   dest="$SERVER_DIR/plugins/$id"
   mkdir -p "$dest"
   cp "$dir/plugin.json" "$dest/"
-  if [ -f "$dir/$asm.dll" ]; then
-    dll="$dir/$asm.dll"
-  elif [ -f "$dir/bin/$asm.dll" ]; then
+  if [ -f "$dir/bin/$asm.dll" ]; then
     dll="$dir/bin/$asm.dll"
+  elif [ -f "$dir/$asm.dll" ]; then
+    dll="$dir/$asm.dll"
   else
     echo "::error::Plugin DLL not found for $id ($asm.dll)"
     exit 1
