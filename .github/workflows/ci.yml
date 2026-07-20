@@ -34,10 +34,10 @@ jobs:
         run: bash scripts/ci-setup-server-sdk.sh
 
       - name: Build plugin
-        run: dotnet build OrionAttributes.csproj -c Release
+        run: dotnet build OrionAttributes.csproj -c Release --configfile nuget.config --no-restore
 
       - name: Unit tests
-        run: dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --verbosity minimal
+        run: dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --configfile nuget.config --verbosity minimal
 
       - name: Smoke boot server with plugin
         env:
