@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [development]
+    branches: [development, main]
   pull_request:
     branches: [development, main]
 
 jobs:
-  build:
+  build-test-smoke:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,10 +18,28 @@ jobs:
         with:
           path: plugin
 
+      - name: Checkout OrionServerBE
+        uses: actions/checkout@v4
+        with:
+          repository: OrionBedrock/OrionServerBE
+          ref: main
+          path: OrionServerBE
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
 
-      - name: Build
+      - name: Pack Orion SDK from server checkout
+        run: bash scripts/ci-setup-server-sdk.sh
+
+      - name: Build plugin
         run: dotnet build OrionAttributes.csproj -c Release
+
+      - name: Unit tests
+        run: dotnet test tests/Orion.Plugins.Attributes.Tests/Orion.Plugins.Attributes.Tests.csproj -c Release --verbosity minimal
+
+      - name: Smoke boot server with plugin
+        env:
+          PLUGIN_DEP_DIRS: ""
+        run: bash scripts/ci-smoke-server.sh
