@@ -4,17 +4,24 @@ Opt-in vanilla vitals: **health**, **hunger**, and food consumption.
 
 - **Manifest id:** `orion:attributes`
 - **Provides:** `orion:attributes`, `orion:health`, `orion:hunger`
-- **Soft depend:** `orion:inventory` (food use goes through player inventory when loaded)
+- **Soft depend:** `orion:inventory` (food use decrements stacks when inventory is loaded)
+- **SDK:** Orion.Api / PluginContracts / Gameplay.Api / Protocol **0.1.6+** (Api-only; no `Orion.dll`)
 
 ## Build
 
-Requires the [Orion SDK](https://www.nuget.org/packages/Orion.Api) (`0.1.*`) from NuGet:
+Requires the [Orion SDK](https://www.nuget.org/packages/Orion.Api) (`0.1.6+`) from NuGet (or a local pack from OrionServerBE):
 
 ```bash
 dotnet build OrionAttributes.csproj -c Release
 ```
 
 Deploy `plugin.json` and `orion.attributes.dll` under `plugins/orion:attributes/` on the server.
+
+## Behavior
+
+- `EntityHealthTrait` / `PlayerHungerTrait` as `EntityTraitBase` — damage, knockback, starve, sprint drain, regen
+- `AttributeGameplayServices` — `EnableHud`, health/hunger services, food begin/complete via `IItemType.TryGetFood`
+- Join: host hides vitals by default; this plugin resets Health + Hunger HUD elements
 
 ## API
 

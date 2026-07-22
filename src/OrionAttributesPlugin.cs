@@ -9,11 +9,15 @@ public sealed class OrionAttributesPlugin : IOrionPlugin
 
     public Version Version { get; } = new(1, 0, 0);
 
-    public void Load(IPluginLoadContext context) => _ = context;
+    public void Load(IPluginLoadContext context)
+    {
+        var assembly = typeof(OrionAttributesPlugin).Assembly;
+        context.Registries.EntityTraits.RegisterFromAssembly(assembly, Id);
+    }
 
     public void OnEnable(IPluginContext context)
     {
-        AttributeGameplayServices services = new();
+        AttributeGameplayServices services = new(context.Server, context.Services);
         context.Services.Register<IAttributesApi>(services, this);
         context.Services.Register<IEntityHealthService>(services, this);
         context.Services.Register<IPlayerHungerService>(services, this);
